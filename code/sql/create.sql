@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS Owns CASCADE;--OK
 DROP TABLE IF EXISTS Service_Request CASCADE;--OK
 DROP TABLE IF EXISTS Closed_Request CASCADE;--OK
 
-
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
 -------------
 ---DOMAINS---
 -------------
@@ -66,7 +66,7 @@ CREATE TABLE Service_Request
 	rid INTEGER NOT NULL,
 	customer_id INTEGER NOT NULL,
 	car_vin VARCHAR(16) NOT NULL,
-	date DATE NOT NULL,
+	date TIMESTAMP NOT NULL,
 	odometer _PINTEGER NOT NULL,
 	complain TEXT,
 	PRIMARY KEY (rid),
@@ -79,7 +79,7 @@ CREATE TABLE Closed_Request
 	wid INTEGER NOT NULL,
 	rid INTEGER NOT NULL,
 	mid INTEGER NOT NULL,
-	date DATE NOT NULL,
+	date TIMESTAMP NOT NULL,
 	comment TEXT,
 	bill _PINTEGER NOT NULL,
 	PRIMARY KEY (wid),
@@ -98,7 +98,7 @@ COPY Customer (
 	phone,
 	address
 )
-FROM '../data/customer.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\customer.csv'
 WITH DELIMITER ',';
 
 COPY Mechanic (
@@ -107,7 +107,7 @@ COPY Mechanic (
 	lname,
 	experience
 )
-FROM 'mechanic.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\mechanic.csv'
 WITH DELIMITER ',';
 
 COPY Car (
@@ -116,7 +116,7 @@ COPY Car (
 	model,
 	year
 )
-FROM 'car.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\car.csv'
 WITH DELIMITER ',';
 
 COPY Owns (
@@ -124,7 +124,7 @@ COPY Owns (
 	customer_id,
 	car_vin
 )
-FROM 'owns.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\owns.csv'
 WITH DELIMITER ',';
 
 COPY Service_Request (
@@ -135,7 +135,7 @@ COPY Service_Request (
 	odometer,
 	complain
 )
-FROM 'service_request.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\service_request.csv'
 WITH DELIMITER ',';
 
 COPY Closed_Request (
@@ -146,5 +146,5 @@ COPY Closed_Request (
 	comment,
 	bill
 )
-FROM 'closed_request.csv'
+FROM 'C:\Users\Emily Mai\Documents\CS166\Project\Phase_3\code\data\closed_request.csv'
 WITH DELIMITER ',';
