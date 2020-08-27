@@ -359,9 +359,39 @@ public class MechanicShop{
 	}
 	
 	public static void AddMechanic(MechanicShop esql){//2
-		// TODO: take input
-		// TODO: check validity of input
-		String query = ""; //
+		String id = null, fname = null, lname = null;
+		int experience = 0;
+		System.out.println("Enter mechanic's id:");
+		try{
+			id = in.readLine();
+		} catch (Exception e) {
+			System.out.println("Invalid id.");
+		}
+		System.out.println("Enter mechanic's first name:");
+		try{
+			fname = in.readLine();
+		} catch (Exception e) {
+			System.out.println("Invalid first name.");
+		}
+		System.out.println("Enter mechanic's last name:");
+		try{
+			lname = in.readLine();
+		} catch (Exception e) {
+			System.out.println("Invalid last name.");
+		}
+		System.out.println("Enter mechanic's years of experience:");
+		try{
+			experience = in.readLine();
+		} catch (Exception e) {
+			System.out.println("Invalid years.");
+		}
+		String query = "INSERT INTO "
+				+ "Mechanic (id, fname, lname, experience)"
+				+ "VALUES("
+				+ id + ",'"
+				+ fname + "', '"
+				+ lname + "', '"
+				+ Integer.toString(experience) + "');";
 		esql.executeQueryAndPrintResult(query);
 	}
 	
@@ -413,7 +443,7 @@ public class MechanicShop{
 	}
 	
 	public static void InsertServiceRequest(MechanicShop esql){//4
-		//add GUI
+		
 	}
 	
 	public static void CloseServiceRequest(MechanicShop esql) throws Exception{//5
@@ -493,12 +523,12 @@ public class MechanicShop{
 	
 	public static void ListCustomersWithBillLessThan100(MechanicShop esql){//6
 		String query = "SELECT * "
-				+ "FROM Customer C"
-					+ "WHERE SELECT *, * "
-					+ "FROM Service_Request SR Closed_Request CR "
-					+ "WHERE CR.bill < 100 "
-						+ "and SR.rid = CR.rid"
-						+ "and SR.customer_id = C.id";
+				+ "FROM Customer C IN ("
+					+ "SELECT CR.bill, SR.rid, SR.customer_id "
+					+ "FROM Service_Request SR, Closed_Request CR "
+					+ "WHERE CR.bill < 100 and"
+						+ "SR.rid = CR.rid and"
+						+ "SR.customer_id = C.id)";
 		esql.executeQueryAndPrintResult(query);
 	}
 	
@@ -515,12 +545,12 @@ public class MechanicShop{
 	
 	public static void ListCarsBefore1995With50000Milles(MechanicShop esql){//8
 		String query = "SELECT DISTINCT C.make, C.model, C.year "
-				+ "FROM Car	C "
-					+ "WHERE SELECT * "
+				+ "FROM Car	C IN ("
+					+ "SELECT * "
 					+ "FROM Service_Request SR"
 						+ "WHERE C.vin = SR.carvin "
 							+ "and year < 1995"
-							+ "and odometer < 50000";
+							+ "and odometer < 50000)";
 		esql.executeQueryAndPrintResult(query);
 	}
 	
@@ -556,10 +586,11 @@ public class MechanicShop{
 	}
 	
 	public static void ListCustomersInDescendingOrderOfTheirTotalBill(MechanicShop esql){//10
-		String query = "SELECT DISTINCT C.fname, C.lname, SUM (CR.bill) AS total bill " // distinct?
-				+ "FROM Customer C Closed_Request CR Service_Request SR "
-				+ "WHERE CR.rid = SR.rid"
-					+ "and SR.customer_id = C.id";
+		String query = "SELECT DISTINCT C.fname, C.lname, SUM (CR.bill) AS sbill " // distinct?
+				+ "FROM Customer C, Closed_Request CR, Service_Request SR "
+					+ "WHERE CR.rid = SR.rid"
+						+ "and SR.customer_id = C.id"
+				+ "ORDER BY sbill Desc";
 		esql.executeQueryAndPrintResult(query);
 	}
 	
