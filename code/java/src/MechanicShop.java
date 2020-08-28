@@ -18,7 +18,10 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -207,7 +210,7 @@ public class MechanicShop{
 
 	/**
 	 * The main execution method
-	 * 
+	 *
 	 * @param args the command line arguments this inclues the <mysql|pgsql> <login file>
 	 */
 	public static void main (String[] args) {
@@ -217,12 +220,12 @@ public class MechanicShop{
 		            " <dbname> <port> <user>");
 			return;
 		}//end if
-		
+
 		MechanicShop esql = null;
-		
+
 		try{
 			System.out.println("(1)");
-			
+
 			try {
 				Class.forName("org.postgresql.Driver");
 			}catch(Exception e){
@@ -231,14 +234,14 @@ public class MechanicShop{
 				e.printStackTrace();
 				return;
 			}
-			
+
 			System.out.println("(2)");
 			String dbname = args[0];
 			String dbport = args[1];
 			String user = args[2];
-			
+
 			esql = new MechanicShop (dbname, dbport, user, "password");
-			
+
 			boolean keepon = true;
 			while(keepon){
 				System.out.println("MAIN MENU");
@@ -254,23 +257,24 @@ public class MechanicShop{
 				System.out.println("9. ListKCarsWithTheMostServices");
 				System.out.println("10. ListCustomersInDescendingOrderOfTheirTotalBill");
 				System.out.println("11. < EXIT");
-				
+
 				/*
 				 * FOLLOW THE SPECIFICATION IN THE PROJECT DESCRIPTION
+				 * NOTE: I have commented this because my front end handles this
 				 */
-				switch (readChoice()){
-					case 1: AddCustomer(esql); break;
-					case 2: AddMechanic(esql); break;
-					case 3: AddCar(esql); break;
-					case 4: InsertServiceRequest(esql); break;
-					case 5: CloseServiceRequest(esql); break;
-					case 6: ListCustomersWithBillLessThan100(esql); break;
-					case 7: ListCustomersWithMoreThan20Cars(esql); break;
-					case 8: ListCarsBefore1995With50000Milles(esql); break;
-					case 9: ListKCarsWithTheMostServices(esql); break;
-					case 10: ListCustomersInDescendingOrderOfTheirTotalBill(esql); break;
-					case 11: keepon = false; break;
-				}
+//				switch (readChoice()){
+//					case 1: AddCustomer(esql); break;
+//					case 2: AddMechanic(esql); break;
+//					case 3: AddCar(esql); break;
+//					case 4: InsertServiceRequest(esql); break;
+//					case 5: CloseServiceRequest(esql); break;
+//					case 6: ListCustomersWithBillLessThan100(esql); break;
+//					case 7: ListCustomersWithMoreThan20Cars(esql); break;
+//					case 8: ListCarsBefore1995With50000Milles(esql); break;
+//					case 9: ListKCarsWithTheMostServices(esql); break;
+//					case 10: ListCustomersInDescendingOrderOfTheirTotalBill(esql); break;
+//					case 11: keepon = false; break;
+//				}
 			}
 		}catch(Exception e){
 			System.err.println (e.getMessage ());
@@ -280,7 +284,7 @@ public class MechanicShop{
 					System.out.print("Disconnecting from database...");
 					esql.cleanup ();
 					System.out.println("Done\n\nBye !");
-				}//end if				
+				}//end if
 			}catch(Exception e){
 				// ignored.
 			}
@@ -302,103 +306,48 @@ public class MechanicShop{
 		}while (true);
 		return input;
 	}//end readChoice
-	
-	public static void AddCustomer(MechanicShop esql) throws SQLException {//1
-		String id = null;
-		String fname = null;
-		String lname = null;
-		String phone = null;
-		String addy = null;
 
-		System.out.println("Enter id:");
-		try{
-			id = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid id");
-		}
 
-		System.out.println("Enter first name:");
+	/* Purpose of this function is to add a customer and to check that inputted info is valid based on the constraints
+	of the database schema by using INSERT INTO query*/
+	public static void AddCustomer(MechanicShop esql, String fname, String lname, String phone, String addy) {//1
 		try{
-			fname = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid first name");
-		}
-
-		System.out.println("Enter last name:");
-		try{
-			lname = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid last name");
-		}
-
-		System.out.println("Enter phone:");
-		try{
-			phone = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid phone number");
-		}
-
-		System.out.println("Enter address:");
-		try{
-			addy = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid address");
-		}
-
-		try{
-			esql.executeUpdate("INSERT INTO Customer (id, fname, lname, phone, address) VALUES("+
-					id + ",'" +
+			esql.executeUpdate("INSERT INTO Customer (fname, lname, phone, address) VALUES("+ "'" +
 					fname + "', '" +
 					lname + "', '" +
 					phone + "','" +
 					addy + "');"
 			);
+			System.out.println("Customer inserted!");
+			esql.executeQueryAndPrintResult("SELECT * FROM Customer ORDER BY id DESC LIMIT 1;");
 		} catch (SQLException throwables) {
+			System.out.println("Insert failed; invalid date. Please try again!");
 			throwables.printStackTrace();
 		}
 	}
-	
-	public static void AddMechanic(MechanicShop esql){//2
-		// TODO: take input
-		// TODO: check validity of input
-		String query = ""; //
-		esql.executeQueryAndPrintResult(query);
+
+	/* Purpose of this function is to add a mechanic and to check that inputted info is valid based on the constraints
+	of the database schema by using INSERT INTO query*/
+	public static void AddMechanic(MechanicShop esql, String fname, String lname, String experience) {//2
+		String query = "INSERT INTO "
+				+ "Mechanic (fname, lname, experience)"
+				+ "VALUES(" + "'"
+				+ fname + "', '"
+				+ lname + "', '"
+				+ experience + "');";
+		try {
+			esql.executeUpdate(query);
+			System.out.println("Mechanic inserted!");
+			esql.executeQueryAndPrintResult("SELECT * FROM Mechanic ORDER BY id DESC LIMIT 1;");
+		} catch (SQLException throwables) {
+			System.out.println("Insert failed; invalid date. Please try again!");
+			throwables.printStackTrace();
+		}
 	}
-	
-	public static void AddCar(MechanicShop esql){//3
-		String vin = null;
-		String make = null;
-		String model = null;
-		String year = null;
 
-		System.out.println("Enter vin:");
-		try{
-			vin = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid vin");
-		}
-
-		System.out.println("Enter make:");
-		try{
-			make = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid make");
-		}
-
-		System.out.println("Enter model:");
-		try{
-			model = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid model");
-		}
-
-		System.out.println("Enter year:");
-		try{
-			year = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid year");
-		}
-
+	/* Purpose of this function is to add a car and to check that inputted info is valid based on the constraints
+	of the database schema by using INSERT INTO query*/
+	public static void AddCar(MechanicShop esql, String vin, String make, String model, String year){//3
 		try{
 			esql.executeUpdate("INSERT INTO Car VALUES("+ "'"
 					+ vin + "'" + ",'"
@@ -406,161 +355,130 @@ public class MechanicShop{
 					+ model + "', '"
 					+ year + "');"
 			);
+			System.out.println("Car inserted!");
 		} catch (SQLException throwables) {
+			System.out.println("Insert failed; invalid date. Please try again!");
+		}
+	}
+
+	/* My partner was suppose to do this function. However, the code she sent for this function is incorrect and I did
+	not get the time to redo/fix this function completely. Would have wanted the function to, given
+	a last name, search for existing customers. If there are existing customers let me view all the cars of the customer and
+	provide the option to initiate the service request for one of the listed cars; otherwise prompt user to add the car and
+	service request. Additionally, I would want to be able to check the status of a car(open or closed) */
+	public static void InsertServiceRequest(MechanicShop esql, String rid, String cid, String vin, LocalDate currentLocalDate, String odometer, String complain){//4
+		ZoneId defaultZoneId = ZoneId.systemDefault();
+		Date currentDate = Date.from(currentLocalDate.atStartOfDay(defaultZoneId).toInstant());
+		try{
+			esql.executeUpdate("INSERT INTO Service_Request VALUES("
+					+ rid + ","
+					+ cid + ", '"
+					+ vin + "', '"
+					+ currentDate.toString() + "',"
+					+ odometer + ",'"
+					+ complain + "');"
+			);
+		} catch (SQLException throwables) {
+			System.out.println("Insert failed; invalid date. Please try again!");
 			throwables.printStackTrace();
 		}
+	}
 
+	/* Given a service request id and and mechanic id, the client application should verify the information provided
+	and attempt to create a closing request record. */
+	public static void CloseServiceRequest(MechanicShop esql, String wid, String rid, String mid, String comment, String bill, LocalDate currentLocalDate) {//5
+		ZoneId defaultZoneId = ZoneId.systemDefault();
+		Date currentDate = Date.from(currentLocalDate.atStartOfDay(defaultZoneId).toInstant());
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try {
+			int mrows = esql.executeQuery("SELECT * FROM Mechanic WHERE id =  "+mid+";");
+			if (mrows != 1) {
+				System.out.println("Mechanic does not exist!");
+				return;
+			}
+
+			List<List<String>> result = esql.executeQueryAndReturnResult("SELECT date FROM Service_Request WHERE rid =  "+rid+";");
+			if (result.isEmpty()) {
+				System.out.println("Service request does not exist!");
+				return;
+			}
+
+			String rstdatestring = result.get(0).get(0);
+			Date rstdate = null;
+			try {
+				rstdate = formatter.parse(rstdatestring);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			assert rstdate != null;
+			if(rstdate.before(currentDate)) {
+				esql.executeUpdate("INSERT INTO Closed_Request VALUES(" +
+						wid + "," +
+						rid + "," +
+						mid + ", '" +
+						currentDate.toString() + "', '" +
+						comment + "'," +
+						bill + ");"
+				);
+				System.out.println("Closed Service Request!");
+			}
+			else {
+				System.out.println("Invalid date! Please try again.");
+			}
+		} catch (SQLException throwables) {
+			System.out.println("Insert failed. Please try again!");
+			throwables.printStackTrace();
+		}
 	}
 	
-	public static void InsertServiceRequest(MechanicShop esql){//4
-		//add GUI
+	public static List<List<String>> ListCustomersWithBillLessThan100(MechanicShop esql) throws SQLException {//6
+		String query = "SELECT date, comment, bill "
+				+ "FROM Closed_Request CR "
+				+ "WHERE CR.bill < 100 ";
+		return esql.executeQueryAndReturnResult(query);
 	}
 	
-	public static void CloseServiceRequest(MechanicShop esql) throws Exception{//5
-		String rid = null;
-		String mid = null;
-		String comment = null;
-		String bill = null;
-		String datestring = null;
-		Date date = null;
-		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-
-		System.out.println("Enter service request id:");
-		try{
-			rid = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid service request id");
-		}
-
-		System.out.println("Enter mechanic id:");
-		try{
-			mid = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid mechanic id");
-		}
-
-		System.out.println("Enter today's date and current time (dd/MM/yyyy HH:mm:ss):");
-		try{
-			datestring = in.readLine();
-			date = formatter.parse(datestring);
-		} catch (IOException e) {
-			System.out.println("Invalid date and time");
-		}
-
-		System.out.println("Enter a comment:");
-		try{
-			comment = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid comment");
-		}
-
-		System.out.println("Enter bill amount:");
-		try{
-			bill = in.readLine();
-		} catch (IOException e) {
-			System.out.println("Invalid amount");
-		}
-
-		int mrows = esql.executeQuery("SELECT * FROM Mechanic WHERE id =  "+mid+";");
-		if (mrows != 1) {
-			System.out.println("Mechanic does not exist!");
-			return;
-		}
-
-		List<List<String>> result = esql.executeQueryAndReturnResult("SELECT date FROM Service_Request WHERE rid =  "+rid+";");
-		if (result.isEmpty()) {
-			System.out.println("Service request does not exist!");
-			return;
-		}
-
-		String rstdatestring = result.get(0).get(0);
-		Date rstdate = formatter.parse(rstdatestring);
-		if(rstdate.before(date)) {
-			esql.executeUpdate("INSERT INTO Closed_Request VALUES("+
-					rid + "," +
-					rid + "," +
-					mid + ", '" +
-					datestring + "', '" +
-					comment + "'," +
-					bill + ");"
-			);
-		}
-		else {
-			System.out.println("Invalid date bro");
-		}
-
-	}
-	
-	public static void ListCustomersWithBillLessThan100(MechanicShop esql){//6
-		String query = "SELECT * "
-				+ "FROM Customer C"
-					+ "WHERE SELECT *, * "
-					+ "FROM Service_Request SR Closed_Request CR "
-					+ "WHERE CR.bill < 100 "
-						+ "and SR.rid = CR.rid"
-						+ "and SR.customer_id = C.id";
-		esql.executeQueryAndPrintResult(query);
-	}
-	
-	public static void ListCustomersWithMoreThan20Cars(MechanicShop esql) throws SQLException {//7
-		esql.executeQueryAndReturnResult("SELECT C.fname, C.lname " +
+	public static List<List<String>> ListCustomersWithMoreThan20Cars(MechanicShop esql) throws SQLException {//7
+		return esql.executeQueryAndReturnResult("SELECT DISTINCT C.fname, C.lname " +
                 "FROM Customer C, Owns O " +
-                "WHERE C.customer_id = O.customer_id AND C.customer_id IN (" +
+                "WHERE C.id = O.customer_id AND C.id IN (" +
                 "SELECT customer_id " +
                 "FROM Owns " +
-                "WHERE COUNT(car_vin) > 20 " +
-                "GROUP BY customer_id);"
+                "GROUP BY customer_id " +
+				"HAVING COUNT(car_vin) > 20);"
         );
 	}
 	
-	public static void ListCarsBefore1995With50000Milles(MechanicShop esql){//8
-		String query = "SELECT DISTINCT C.make, C.model, C.year "
-				+ "FROM Car	C "
-					+ "WHERE SELECT * "
-					+ "FROM Service_Request SR"
-						+ "WHERE C.vin = SR.carvin "
-							+ "and year < 1995"
-							+ "and odometer < 50000";
-		esql.executeQueryAndPrintResult(query);
+	public static List<List<String>> ListCarsBefore1995With50000Milles(MechanicShop esql) throws SQLException {//8
+		String query = "SELECT C.make, C.model, C.year "
+				+ "FROM Car	C, Service_Request SR "
+				+ "WHERE C.vin = SR.car_vin "
+				+ "AND C.year < 1995 AND SR.odometer < 50000;";
+		return esql.executeQueryAndReturnResult(query);
 	}
 	
-	public static void ListKCarsWithTheMostServices(MechanicShop esql) throws SQLException {//9
-        List<List<String>> oldList = esql.executeQueryAndReturnResult("SELECT C.make, C.model, COUNT(S.rid)" +
-                "FROM Car C, Service_Request S" +
-                "WHERE C.vin = S.car_vin" +
-                "GROUP BY C.vin" +
+	public static List<List<String>> ListKCarsWithTheMostServices(MechanicShop esql, int k) throws SQLException {//9
+        List<List<String>> oldList = esql.executeQueryAndReturnResult("SELECT C.make, C.model, COUNT(S.rid) " +
+                "FROM Car C, Service_Request S " +
+                "WHERE C.vin = S.car_vin " +
+                "GROUP BY C.make, C.model, C.vin " +
                 "ORDER BY COUNT(S.rid) DESC;"
         );
 
-        int k = 0;
-        System.out.println("Enter value for k:");
-        try{
-            k = Integer.parseInt(in.readLine());
-        } catch (IOException e) {
-            System.out.println("Invalid value for k");
-        }
-
-        List<List<String>> newList = new ArrayList<List<String>>();
+        List<List<String>> newList = new ArrayList<>();
         for (int i = 0; i < k; i++) {
-            newList.add(oldList.get(k));
+            newList.add(oldList.get(i));
         }
-
-        StringBuilder result = new StringBuilder();
-        for (List<String> strings : newList) {
-            for (String string : strings) {
-                result.append(string);
-            }
-            result.append("\n");
-        }
-        System.out.println(result);
+        return newList;
 	}
 	
-	public static void ListCustomersInDescendingOrderOfTheirTotalBill(MechanicShop esql){//10
-		String query = "SELECT DISTINCT C.fname, C.lname, SUM (CR.bill) AS total bill " // distinct?
-				+ "FROM Customer C Closed_Request CR Service_Request SR "
-				+ "WHERE CR.rid = SR.rid"
-					+ "and SR.customer_id = C.id";
-		esql.executeQueryAndPrintResult(query);
+	public static List<List<String>> ListCustomersInDescendingOrderOfTheirTotalBill(MechanicShop esql) throws SQLException {//10
+		String query = "SELECT C.fname, C.lname, SUM(CR.bill) " // distinct?
+				+ "FROM Customer C, Closed_Request CR, Service_Request SR "
+				+ "WHERE CR.rid = SR.rid AND SR.customer_id = C.id "
+				+ "GROUP BY C.fname, C.lname "
+				+ "ORDER BY SUM(CR.bill) DESC;";
+		return esql.executeQueryAndReturnResult(query);
 	}
 	
 }
